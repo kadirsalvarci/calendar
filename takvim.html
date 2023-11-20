@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Takvim Uygulaması</title>
+    <style>
+        body {
+            background-color: #f5f5dc; /* Krem rengi */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh; /* Sayfa yüksekliği ekran yüksekliğine eşit olacak şekilde ayarlandı */
+            margin: 0;
+        }
+
+        h2 {
+            color: #333; /* Yazı rengi */
+        }
+
+        div {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #4caf50; /* Yeşil renk */
+            color: white;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049; /* Hover rengi */
+        }
+
+        #notlar {
+            text-align: center;
+            max-width: 400px;
+            margin-top: 20px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 30px; /* Her not arasına biraz daha fazla boşluk bırak */
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Hafif gölge */
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .not-aciklama {
+            margin-bottom: 20px; /* Açıklama ile sil butonu arasına boşluk bırak */
+            flex-grow: 1;
+        }
+
+        .sil-button {
+            background-color: #ff5555; /* Kırmızı renk */
+            color: white;
+            padding: 5px;
+            border: none;
+            cursor: pointer;
+            border-radius: 3px;
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            margin-top: 15px; /* Sil butonu ile not arasındaki boşluğu artır */
+        }
+
+        .sil-button:hover {
+            background-color: #ff0000; /* Hover rengi */
+        }
+    </style>
+</head>
+<body>
+
+<h2>Python Takvim Uygulaması</h2>
+
+<div>
+    <label for="tarih">Tarih:</label>
+    <input type="date" id="tarih">
+</div>
+
+<div>
+    <label for="saat">Saat:</label>
+    <input type="time" id="saat">
+</div>
+
+<div>
+    <label for="not">Not:</label>
+    <textarea id="not" placeholder="Notunuzu buraya girin"></textarea>
+</div>
+
+<button onclick="notEkle()">Not Ekle</button>
+
+<div id="notlar">
+    <h3>Notlar</h3>
+    <ul id="notListesi"></ul>
+</div>
+
+<script>
+    function notEkle() {
+        var tarih = document.getElementById("tarih").value;
+        var saat = document.getElementById("saat").value;
+        var notText = document.getElementById("not").value;
+
+        // Geçerli bir tarih kontrolü yap
+        if (!isValidDate(tarih) || !isValidTime(saat)) {
+            alert("Geçerli bir tarih ve saat giriniz.");
+            return;
+        }
+
+        var notListesi = document.getElementById("notListesi");
+        var li = document.createElement("li");
+        li.className = "not-elemani";
+
+        var aciklamaDiv = document.createElement("div");
+        aciklamaDiv.className = "not-aciklama";
+        aciklamaDiv.appendChild(document.createTextNode(tarih + " " + saat + ": " + notText));
+
+        var silButton = document.createElement("button");
+        silButton.className = "sil-button";
+        silButton.innerHTML = "Sil";
+        silButton.onclick = function () {
+            notSil(notListesi, li);
+        };
+
+        li.appendChild(aciklamaDiv);
+        li.appendChild(silButton);
+        notListesi.appendChild(li);
+
+        // Notları localStorage'a ekleyerek sakla
+        var notlar = JSON.parse(localStorage.getItem("notlar")) || [];
+        notlar.push({ tarih: tarih, saat: saat, notText: notText });
+        localStorage.setItem("notlar", JSON.stringify(notlar));
+    }
+
+    function notSil(notListesi, li) {
+        var index = Array.from(notListesi.children).indexOf(li);
+        notListesi.removeChild(li);
+
+        // localStorage'dan notu sil
+        var notlar = JSON.parse(localStorage.getItem("notlar")) || [];
+        notlar.splice(index, 1);
+        localStorage.setItem("notlar", JSON.stringify(notlar));
+    }
+
+    function isValidDate(dateString) {
+        var regex = /^\d{4}-\d{2}-\d{2}$/;
+        return dateString.match(regex) !== null;
+    }
+
+    function isValidTime(timeString) {
+        var regex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+        return timeString.match(regex) !== null;
+    }
+
+    // Sayfa yüklendiğinde localStorage'dan notları al ve görüntüle
+    window.onload = function () {
+        var notlar = JSON.parse(localStorage.getItem("notlar")) || [];
+        var notListesi = document.getElementById("notListesi");
+
+        notlar.forEach(function (not) {
+            var li = document.createElement("li");
+            li.className = "not-elemani";
+
+            var aciklamaDiv = document.createElement("div");
+            aciklamaDiv.className = "not-aciklama";
+            aciklamaDiv.appendChild(document.createTextNode(not.tarih + " " + not.saat + ": " + not.notText));
+
+            var silButton = document.createElement("button");
+            silButton.className = "sil-button";
+            silButton.innerHTML = "Sil";
+            silButton.onclick = function () {
+                notSil(notListesi, li);
+            };
+
+            li.appendChild(aciklamaDiv);
+            li.appendChild(silButton);
+            notListesi.appendChild(li);
+        });
+    }
+</script>
+
+</body>
+</html>
